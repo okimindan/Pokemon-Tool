@@ -168,6 +168,7 @@ curl -X POST https://k7jncd6nq5.execute-api.ap-northeast-1.amazonaws.com/v1/calc
   }'
 ```
 
+- 指定できるKEY項目は`calc-handler.ts:173-197`に記載
 ## ローカル開発
 
 ```bash
