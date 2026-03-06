@@ -1,0 +1,43 @@
+{
+  "name": "pokemon-sv-damage-calc",
+  "version": "1.0.0",
+  "description": "Pokemon SV damage calculation backend system",
+  "main": "dist/lambda/calc-handler.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "cdk:bootstrap": "cd cdk && npx cdk bootstrap",
+    "cdk:deploy": "cd cdk && npx cdk deploy",
+    "cdk:diff": "cd cdk && npx cdk diff",
+    "cdk:synth": "cd cdk && npx cdk synth"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0",
+    "@aws-sdk/client-lambda": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "aws-cdk": "^2.178.0",
+    "aws-cdk-lib": "^2.178.0",
+    "constructs": "^10.0.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.4.5"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/src"],
+    "testMatch": ["**/*.test.ts"],
+    "collectCoverageFrom": ["src/**/*.ts", "!src/**/*.d.ts"]
+  }
+}
