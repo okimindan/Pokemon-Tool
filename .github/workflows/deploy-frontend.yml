@@ -1,0 +1,79 @@
+name: Deploy Frontend to S3
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Build Next.js static export
+        run: npm run build
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+          role-session-name: PokemonFrontendDeploy
+
+      - name: Sync JS/CSS to S3 (immutable cache)
+        run: |
+          aws s3 sync out/ s3://pokemon-tool-frontend-869807375374/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "*.html" \
+            --exclude "*.json" \
+            --exclude "*.txt"
+
+      - name: Sync HTML/JSON to S3 (no-cache)
+        run: |
+          aws s3 sync out/ s3://pokemon-tool-frontend-869807375374/ \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --include "*.html" \
+            --include "*.json" \
+            --include "*.txt" \
+            --exclude "*" \
+            --exclude "_next/*"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?DomainName=='d23dsspv6o03c0.cloudfront.net'].Id" \
+            --output text)
+          aws cloudfront create-invalidation \
+            --distribution-id "$DISTRIBUTION_ID" \
+            --paths "/*"
+
+      - name: Deploy complete
+        run: echo "Frontend deployed to https://d23dsspv6o03c0.cloudfront.net"

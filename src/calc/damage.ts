@@ -266,7 +266,7 @@ function calcDamageRolls(
     // STAB
     dmg = Math.floor(dmg * (stab * 4096) / 4096)
     // タイプ相性 (4096ベースの整数演算)
-    dmg = pokeRound(dmg * typeToFraction(type))
+    dmg = pokeRound(dmg * typeToFraction(type) / 4096)
     // やけど
     dmg = chainFloorMul(dmg, burn)
     // 壁

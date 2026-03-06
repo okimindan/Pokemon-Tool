@@ -1,0 +1,61 @@
+import type { PokemonRow, MoveRow } from "./types"
+
+// ============================================================
+// API障害時のフォールバックデータ (上位対戦ポケモン + 主要技)
+// ============================================================
+
+export const FALLBACK_POKEMON: PokemonRow[] = [
+  { id: 445, name: "Garchomp",    nameJa: "ガブリアス",    type1: "Dragon",  type2: "Ground",  hp: 108, attack: 130, defense: 95,  spAttack: 80,  spDefense: 85,  speed: 102 },
+  { id: 887, name: "Dragapult",   nameJa: "ドラパルト",    type1: "Dragon",  type2: "Ghost",   hp: 88,  attack: 120, defense: 75,  spAttack: 100, spDefense: 75,  speed: 142 },
+  { id: 785, name: "Tapu Koko",   nameJa: "カプ・コケコ",  type1: "Electric",type2: "Fairy",   hp: 70,  attack: 115, defense: 85,  spAttack: 95,  spDefense: 75,  speed: 130 },
+  { id: 144, name: "Articuno",    nameJa: "フリーザー",    type1: "Ice",     type2: "Flying",  hp: 90,  attack: 85,  defense: 100, spAttack: 95,  spDefense: 125, speed: 85  },
+  { id: 149, name: "Dragonite",   nameJa: "カイリュー",    type1: "Dragon",  type2: "Flying",  hp: 91,  attack: 134, defense: 95,  spAttack: 100, spDefense: 100, speed: 80  },
+  { id: 376, name: "Metagross",   nameJa: "メタグロス",    type1: "Steel",   type2: "Psychic", hp: 80,  attack: 135, defense: 130, spAttack: 95,  spDefense: 90,  speed: 70  },
+  { id: 282, name: "Gardevoir",   nameJa: "サーナイト",    type1: "Psychic", type2: "Fairy",   hp: 68,  attack: 65,  defense: 65,  spAttack: 125, spDefense: 115, speed: 80  },
+  { id: 681, name: "Aegislash",   nameJa: "ギルガルド",    type1: "Steel",   type2: "Ghost",   hp: 60,  attack: 150, defense: 150, spAttack: 150, spDefense: 150, speed: 60  },
+  { id: 800, name: "Necrozma",    nameJa: "ネクロズマ",    type1: "Psychic", type2: "",        hp: 97,  attack: 107, defense: 101, spAttack: 127, spDefense: 89,  speed: 79  },
+  { id: 778, name: "Mimikyu",     nameJa: "ミミッキュ",    type1: "Ghost",   type2: "Fairy",   hp: 55,  attack: 90,  defense: 80,  spAttack: 50,  spDefense: 105, speed: 96  },
+  { id: 823, name: "Corviknight", nameJa: "アーマーガア",  type1: "Flying",  type2: "Steel",   hp: 98,  attack: 87,  defense: 105, spAttack: 53,  spDefense: 85,  speed: 67  },
+  { id: 879, name: "Copperajah",  nameJa: "ダイオウドウ",  type1: "Steel",   type2: "",        hp: 122, attack: 130, defense: 69,  spAttack: 80,  spDefense: 69,  speed: 30  },
+  { id: 869, name: "Alcremie",    nameJa: "マホイップ",    type1: "Fairy",   type2: "",        hp: 65,  attack: 60,  defense: 75,  spAttack: 110, spDefense: 121, speed: 64  },
+  { id: 701, name: "Hawlucha",    nameJa: "ルチャブル",    type1: "Fighting",type2: "Flying",  hp: 78,  attack: 92,  defense: 75,  spAttack: 74,  spDefense: 63,  speed: 118 },
+  { id: 706, name: "Goodra",      nameJa: "ヌメルゴン",    type1: "Dragon",  type2: "",        hp: 90,  attack: 100, defense: 70,  spAttack: 110, spDefense: 150, speed: 80  },
+  { id: 978, name: "Tinkaton",    nameJa: "デカヌチャン",  type1: "Fairy",   type2: "Steel",   hp: 85,  attack: 75,  defense: 77,  spAttack: 70,  spDefense: 105, speed: 94  },
+  { id: 963, name: "Palafin",     nameJa: "イルカマン",    type1: "Water",   type2: "",        hp: 100, attack: 160, defense: 97,  spAttack: 106, spDefense: 87,  speed: 100 },
+  { id: 968, name: "Flamigo",     nameJa: "フラミゴ",      type1: "Flying",  type2: "Fighting",hp: 82,  attack: 115, defense: 74,  spAttack: 75,  spDefense: 64,  speed: 90  },
+  { id: 991, name: "Flutter Mane",nameJa: "ハバタクカミ",  type1: "Ghost",   type2: "Fairy",   hp: 55,  attack: 55,  defense: 55,  spAttack: 135, spDefense: 135, speed: 135 },
+  { id: 995, name: "Iron Hands",  nameJa: "テツノカシラ",  type1: "Fighting",type2: "Electric",hp: 154, attack: 140, defense: 108, spAttack: 50,  spDefense: 68,  speed: 50  },
+]
+
+export const FALLBACK_MOVES: MoveRow[] = [
+  { id: 89,  name: "Earthquake",      nameJa: "じしん",          type: "Ground",   category: "Physical", power: 100, accuracy: 100, pp: 10 },
+  { id: 53,  name: "Flamethrower",    nameJa: "かえんほうしゃ",   type: "Fire",     category: "Special",  power: 90,  accuracy: 100, pp: 15 },
+  { id: 87,  name: "Thunder",         nameJa: "かみなり",         type: "Electric", category: "Special",  power: 110, accuracy: 70,  pp: 10 },
+  { id: 59,  name: "Fire Blast",      nameJa: "だいもんじ",       type: "Fire",     category: "Special",  power: 110, accuracy: 85,  pp: 5  },
+  { id: 56,  name: "Hydro Pump",      nameJa: "ハイドロポンプ",   type: "Water",    category: "Special",  power: 110, accuracy: 80,  pp: 5  },
+  { id: 116, name: "Focus Blast",     nameJa: "きあいだま",       type: "Fighting", category: "Special",  power: 120, accuracy: 70,  pp: 5  },
+  { id: 224, name: "Draco Meteor",    nameJa: "りゅうせいぐん",   type: "Dragon",   category: "Special",  power: 130, accuracy: 90,  pp: 5  },
+  { id: 23,  name: "Slash",           nameJa: "きりさく",         type: "Normal",   category: "Physical", power: 70,  accuracy: 100, pp: 20 },
+  { id: 264, name: "Close Combat",    nameJa: "インファイト",     type: "Fighting", category: "Physical", power: 120, accuracy: 100, pp: 5  },
+  { id: 276, name: "Superpower",      nameJa: "ばかぢから",       type: "Fighting", category: "Physical", power: 120, accuracy: 100, pp: 5  },
+  { id: 442, name: "Shadow Claw",     nameJa: "シャドークロー",   type: "Ghost",    category: "Physical", power: 70,  accuracy: 100, pp: 15 },
+  { id: 337, name: "Hyper Voice",     nameJa: "ハイパーボイス",   type: "Normal",   category: "Special",  power: 90,  accuracy: 100, pp: 10 },
+  { id: 349, name: "Dragon Pulse",    nameJa: "りゅうのはどう",   type: "Dragon",   category: "Special",  power: 85,  accuracy: 100, pp: 10 },
+  { id: 257, name: "Heat Wave",       nameJa: "ねっぷう",         type: "Fire",     category: "Special",  power: 95,  accuracy: 90,  pp: 10 },
+  { id: 192, name: "Iron Head",       nameJa: "アイアンヘッド",   type: "Steel",    category: "Physical", power: 80,  accuracy: 100, pp: 15 },
+  { id: 428, name: "Zen Headbutt",    nameJa: "しねんのずつき",   type: "Psychic",  category: "Physical", power: 80,  accuracy: 90,  pp: 15 },
+  { id: 211, name: "Steel Wing",      nameJa: "こうてつのつばさ", type: "Steel",    category: "Physical", power: 70,  accuracy: 90,  pp: 25 },
+  { id: 85,  name: "Thunderbolt",     nameJa: "10まんボルト",     type: "Electric", category: "Special",  power: 90,  accuracy: 100, pp: 15 },
+  { id: 58,  name: "Ice Beam",        nameJa: "れいとうビーム",   type: "Ice",      category: "Special",  power: 90,  accuracy: 100, pp: 10 },
+  { id: 94,  name: "Psychic",         nameJa: "サイコキネシス",   type: "Psychic",  category: "Special",  power: 90,  accuracy: 100, pp: 10 },
+  { id: 195, name: "Sludge Bomb",     nameJa: "ヘドロばくだん",   type: "Poison",   category: "Special",  power: 90,  accuracy: 100, pp: 10 },
+  { id: 202, name: "Giga Drain",      nameJa: "ギガドレイン",     type: "Grass",    category: "Special",  power: 75,  accuracy: 100, pp: 10 },
+  { id: 523, name: "Boomburst",       nameJa: "ばくおんぱ",       type: "Normal",   category: "Special",  power: 140, accuracy: 100, pp: 10 },
+  { id: 163, name: "Moonblast",       nameJa: "ムーンフォース",   type: "Fairy",    category: "Special",  power: 95,  accuracy: 100, pp: 15 },
+  { id: 406, name: "Aura Sphere",     nameJa: "はどうだん",       type: "Fighting", category: "Special",  power: 80,  accuracy: "",  pp: 20 },
+  { id: 394, name: "Flare Blitz",     nameJa: "フレアドライブ",   type: "Fire",     category: "Physical", power: 120, accuracy: 100, pp: 15 },
+  { id: 399, name: "Leaf Blade",      nameJa: "リーフブレード",   type: "Grass",    category: "Physical", power: 90,  accuracy: 100, pp: 15 },
+  { id: 411, name: "Brave Bird",      nameJa: "ブレイブバード",   type: "Flying",   category: "Physical", power: 120, accuracy: 100, pp: 15 },
+  { id: 231, name: "Iron Tail",       nameJa: "アイアンテール",   type: "Steel",    category: "Physical", power: 100, accuracy: 75,  pp: 15 },
+  { id: 238, name: "Shadow Ball",     nameJa: "シャドーボール",   type: "Ghost",    category: "Special",  power: 80,  accuracy: 100, pp: 15 },
+]
