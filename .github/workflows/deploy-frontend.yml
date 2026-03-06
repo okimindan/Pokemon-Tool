@@ -60,11 +60,10 @@ jobs:
         run: |
           aws s3 sync out/ s3://pokemon-tool-frontend-869807375374/ \
             --cache-control "no-cache, no-store, must-revalidate" \
+            --exclude "*" \
             --include "*.html" \
             --include "*.json" \
-            --include "*.txt" \
-            --exclude "*" \
-            --exclude "_next/*"
+            --include "*.txt"
 
       - name: Invalidate CloudFront cache
         run: |
