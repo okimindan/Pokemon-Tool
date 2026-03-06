@@ -111,11 +111,11 @@ const STAT_RANK_DENOMINATOR: Readonly<Record<number, number>> = {
  * ランク補正の分子を取得 (stat * numerator / denominator)
  */
 export function getRankNumerator(rank: number): number {
-  return STAT_RANK_NUMERATOR[rank.toString()] ?? 2
+  return (STAT_RANK_NUMERATOR as Record<string, number>)[rank.toString()] ?? 2
 }
 
 export function getRankDenominator(rank: number): number {
-  return STAT_RANK_DENOMINATOR[rank.toString()] ?? 2
+  return (STAT_RANK_DENOMINATOR as Record<string, number>)[rank.toString()] ?? 2
 }
 
 /**

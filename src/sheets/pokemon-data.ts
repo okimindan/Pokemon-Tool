@@ -152,6 +152,7 @@ function parseMoveRow(row: string[]): MoveSheetRow | null {
     // "-" や "—" は威力なし (ステータス技等) として扱う
     power:    powerRaw && powerRaw !== "-" && powerRaw !== "—" ? parseInt(powerRaw) : "",
     accuracy: accuracyRaw && accuracyRaw !== "-" && accuracyRaw !== "—" ? parseInt(accuracyRaw) : "",
+    pp:       parseInt(row[MOVE_COLUMNS.PP] ?? "0") || 0,
   }
 }
 
