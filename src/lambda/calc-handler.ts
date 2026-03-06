@@ -17,6 +17,7 @@ import type { DamageCalcInput, ApiResponseBody, DamageCalcResult } from "../calc
 import { calculateDamage } from "../calc/damage"
 import { getPokemonByName, getMoveByName, convertToMoveData } from "../sheets/pokemon-data"
 import { createDefaultContext } from "../calc/index"
+import { loadSheetsIdFromSSM } from "./ssm-loader"
 
 // ============================================================
 // メインハンドラー
@@ -48,6 +49,7 @@ export const handler = async (
   }
 
   try {
+    await loadSheetsIdFromSSM()
     const body = JSON.parse(event.body)
 
     // ── リクエスト種別の分岐 ──────────────────────────────────

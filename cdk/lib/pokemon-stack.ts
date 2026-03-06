@@ -6,60 +6,104 @@
  *   - Lambda: データ取得 (data-handler)
  *   - API Gateway: REST API
  *   - S3: フロントエンド静的ホスティング (将来用)
- *   - Secrets Manager: Google Sheets認証情報
+ *   - Workload Identity Federation でGCP認証 (JSONキー不要)
  */
 
 import * as cdk from "aws-cdk-lib"
 import * as lambda from "aws-cdk-lib/aws-lambda"
 import * as apigateway from "aws-cdk-lib/aws-apigateway"
 import * as s3 from "aws-cdk-lib/aws-s3"
-import * as s3deploy from "aws-cdk-lib/aws-s3-deployment"
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront"
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins"
-import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager"
 import * as iam from "aws-cdk-lib/aws-iam"
 import * as logs from "aws-cdk-lib/aws-logs"
+import * as ssm from "aws-cdk-lib/aws-ssm"
 import { Construct } from "constructs"
 import * as path from "path"
+import * as fs from "fs"
 
 export class PokemonToolStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props)
 
-    // ── Secrets Manager: Google Sheets認証情報 ────────────────
-    const sheetsSecret = new secretsmanager.Secret(this, "GoogleSheetsSecret", {
-      secretName: "pokemon-tool/google-sheets",
-      description: "Google Sheets API credentials for Pokemon Tool",
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: "your-service-account@project.iam.gserviceaccount.com",
-          GOOGLE_SHEETS_ID: "your-spreadsheet-id",
-        }),
-        generateStringKey: "GOOGLE_PRIVATE_KEY",
-      },
+    // ── Lambda 実行ロール (Workload Identity用) ───────────────
+    // このロールのARNをGCPのWorkload Identity Poolに登録済み
+    const lambdaRole = new iam.Role(this, "LambdaExecutionRole", {
+      roleName: "pokemon-tool-lambda-role",
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+      description: "Lambda role for Pokemon Tool - trusted by GCP Workload Identity Pool",
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
+      ],
     })
+
+    // Google Sheets IDはSSM Parameter Storeで管理 (無料・シークレット不要)
+    const sheetsIdParam = new ssm.StringParameter(this, "GoogleSheetsId", {
+      parameterName: "/pokemon-tool/google-sheets-id",
+      stringValue: "YOUR_SPREADSHEET_ID_HERE", // デプロイ後にコンソールで更新
+      description: "Google Sheets Spreadsheet ID for Pokemon data",
+      tier: ssm.ParameterTier.STANDARD,
+    })
+    sheetsIdParam.grantRead(lambdaRole)
+
+    // ── GCP認証設定ファイルの読み込み ────────────────────────
+    // config/gcp-credentials.json は秘密情報なしのWorkload Identity設定
+    const gcpCredentialsPath = path.join(__dirname, "../../config/gcp-credentials.json")
+    const gcpCredentialsJson = fs.existsSync(gcpCredentialsPath)
+      ? fs.readFileSync(gcpCredentialsPath, "utf-8")
+      : "{}"
 
     // ── Lambda 共通設定 ──────────────────────────────────────
     const commonLambdaProps: Omit<lambda.FunctionProps, "handler"> = {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, "../../dist"), {
-        // TypeScriptビルド後のdistディレクトリをバンドル
+      role: lambdaRole,
+      // dist/ と config/ をまとめてバンドル
+      code: lambda.Code.fromAsset(path.join(__dirname, "../.."), {
+        exclude: [
+          "node_modules",
+          "src",
+          "cdk",
+          ".git",
+          ".github",
+          "*.md",
+          "tsconfig.json",
+          "package*.json",
+        ],
+        // distとconfigのみ含める
         bundling: {
-          image: lambda.Runtime.NODEJS_20_X.bundlingImage,
+          image: cdk.DockerImage.fromRegistry("public.ecr.aws/lambda/nodejs:20"),
           command: [
             "bash", "-c",
             [
-              "npm install --prefix /asset-output",
-              "cp -r /asset-input/* /asset-output/",
+              "cp -r /asset-input/dist /asset-output/",
+              "cp -r /asset-input/config /asset-output/",
+              "cp /asset-input/package.json /asset-output/",
+              "cd /asset-output && npm install --production",
             ].join(" && "),
           ],
+          local: {
+            // ローカルビルドが可能な場合はDockerを使わない
+            tryBundle(outputDir: string) {
+              const distDir = path.join(__dirname, "../../dist")
+              const configDir = path.join(__dirname, "../../config")
+              if (!fs.existsSync(distDir)) return false
+              fs.cpSync(distDir, path.join(outputDir, "dist"), { recursive: true })
+              if (fs.existsSync(configDir)) {
+                fs.cpSync(configDir, path.join(outputDir, "config"), { recursive: true })
+              }
+              return true
+            },
+          },
         },
       }),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
         NODE_ENV: "production",
-        GOOGLE_SHEETS_SECRET_ARN: sheetsSecret.secretArn,
+        // GCP認証設定 (秘密情報なし - Workload Identity設定のみ)
+        GOOGLE_APPLICATION_CREDENTIALS: "/var/task/config/gcp-credentials.json",
+        // Sheets ID はSSMから起動時に取得するため、パラメータ名を渡す
+        GOOGLE_SHEETS_ID_PARAM: "/pokemon-tool/google-sheets-id",
       },
       logRetention: logs.RetentionDays.ONE_MONTH,
     }
@@ -68,7 +112,7 @@ export class PokemonToolStack extends cdk.Stack {
     const calcLambda = new lambda.Function(this, "CalcDamageFunction", {
       ...commonLambdaProps,
       functionName: "pokemon-tool-calc-damage",
-      handler: "lambda/calc-handler.handler",
+      handler: "dist/lambda/calc-handler.handler",
       description: "Pokemon SV damage calculation",
     })
 
@@ -76,13 +120,9 @@ export class PokemonToolStack extends cdk.Stack {
     const dataLambda = new lambda.Function(this, "DataFunction", {
       ...commonLambdaProps,
       functionName: "pokemon-tool-data",
-      handler: "lambda/data-handler.handler",
+      handler: "dist/lambda/data-handler.handler",
       description: "Pokemon data from Google Sheets",
     })
-
-    // Secrets Managerへの読み取り権限付与
-    sheetsSecret.grantRead(calcLambda)
-    sheetsSecret.grantRead(dataLambda)
 
     // ── API Gateway ──────────────────────────────────────────
     const api = new apigateway.RestApi(this, "PokemonToolApi", {
@@ -102,20 +142,18 @@ export class PokemonToolStack extends cdk.Stack {
       },
     })
 
-    // /calc リソース
+    // /calc/damage
     const calcResource = api.root.addResource("calc")
-    const calcDamageResource = calcResource.addResource("damage")
-    calcDamageResource.addMethod("POST", new apigateway.LambdaIntegration(calcLambda, {
-      requestTemplates: { "application/json": '{ "statusCode": "200" }' },
-    }))
+    calcResource.addResource("damage").addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(calcLambda)
+    )
 
-    // /data リソース
+    // /data/pokemon, /data/pokemon/all, /data/moves, /data/moves/all
     const dataResource = api.root.addResource("data")
-
     const pokemonResource = dataResource.addResource("pokemon")
     pokemonResource.addMethod("GET", new apigateway.LambdaIntegration(dataLambda))
     pokemonResource.addResource("all").addMethod("GET", new apigateway.LambdaIntegration(dataLambda))
-
     const movesResource = dataResource.addResource("moves")
     movesResource.addMethod("GET", new apigateway.LambdaIntegration(dataLambda))
     movesResource.addResource("all").addMethod("GET", new apigateway.LambdaIntegration(dataLambda))
@@ -125,12 +163,10 @@ export class PokemonToolStack extends cdk.Stack {
       bucketName: `pokemon-tool-frontend-${this.account}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
-      versioned: false,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
-      autoDeleteObjects: false,
     })
 
-    // CloudFront OAC (Origin Access Control)
+    // CloudFront OAC
     const oac = new cloudfront.CfnOriginAccessControl(this, "FrontendOAC", {
       originAccessControlConfig: {
         name: "pokemon-tool-oac",
@@ -159,15 +195,10 @@ export class PokemonToolStack extends cdk.Stack {
       },
       defaultRootObject: "index.html",
       errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: "/index.html", // SPA対応
-        },
+        { httpStatus: 404, responseHttpStatus: 200, responsePagePath: "/index.html" },
       ],
     })
 
-    // S3バケットポリシー: CloudFrontのみアクセス許可
     frontendBucket.addToResourcePolicy(
       new iam.PolicyStatement({
         actions: ["s3:GetObject"],
@@ -200,9 +231,10 @@ export class PokemonToolStack extends cdk.Stack {
       exportName: "PokemonToolFrontendBucket",
     })
 
-    new cdk.CfnOutput(this, "SheetsSecretArn", {
-      value: sheetsSecret.secretArn,
-      description: "Secrets Manager ARN for Google Sheets credentials",
+    new cdk.CfnOutput(this, "LambdaRoleArn", {
+      value: lambdaRole.roleArn,
+      description: "Lambda IAM Role ARN (GCPのWorkload Identity Poolに登録するARN)",
+      exportName: "PokemonToolLambdaRoleArn",
     })
   }
 }

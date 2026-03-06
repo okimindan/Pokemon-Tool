@@ -11,6 +11,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda"
 import type { ApiResponseBody } from "../calc/types"
 import { getPokemonByName, getAllPokemon, getMoveByName, getAllMoves } from "../sheets/pokemon-data"
+import { loadSheetsIdFromSSM } from "./ssm-loader"
 
 const CORS_HEADERS = {
   "Content-Type": "application/json",
@@ -31,6 +32,8 @@ export const handler = async (
   const query = event.queryStringParameters ?? {}
 
   try {
+    await loadSheetsIdFromSSM()
+
     // ── ポケモンデータ ─────────────────────────────────────
     if (path.startsWith("/data/pokemon")) {
       if (path === "/data/pokemon/all") {
