@@ -120,24 +120,18 @@ export async function findRowByColumn(
 // ============================================================
 
 /**
- * 推奨スプレッドシート構造:
+ * スプレッドシート構造 (実際のシートに合わせた定義):
  *
  * シート: "pokemon"
- * 列: id | name | name_ja | type1 | type2 | hp | attack | defense | sp_attack | sp_defense | speed
+ * 列: id | name | type1 | type2 | hp | attack | defense | sp_attack | sp_defense | speed
  *
- * シート: "moves"
- * 列: id | name | name_ja | type | category | power | accuracy | pp
- *
- * シート: "abilities"
- * 列: id | name | name_ja | description
- *
- * シート: "items"
- * 列: id | name | name_ja | description
+ * シート: "move"
+ * 列: id | name | type | category | power | accuracy | pp
  */
 
 export const SHEET_NAMES = {
   POKEMON: "pokemon",
-  MOVES: "moves",
+  MOVES: "move",   // シートタブ名は "move" (複数形なし)
   ABILITIES: "abilities",
   ITEMS: "items",
 } as const
@@ -145,24 +139,24 @@ export const SHEET_NAMES = {
 export const POKEMON_COLUMNS = {
   ID: 0,
   NAME: 1,
-  NAME_JA: 2,
-  TYPE1: 3,
-  TYPE2: 4,
-  HP: 5,
-  ATTACK: 6,
-  DEFENSE: 7,
-  SP_ATTACK: 8,
-  SP_DEFENSE: 9,
-  SPEED: 10,
+  // name_ja 列なし (NAME を日本語名としても使用)
+  TYPE1: 2,
+  TYPE2: 3,
+  HP: 4,
+  ATTACK: 5,
+  DEFENSE: 6,
+  SP_ATTACK: 7,
+  SP_DEFENSE: 8,
+  SPEED: 9,
 } as const
 
 export const MOVE_COLUMNS = {
   ID: 0,
   NAME: 1,
-  NAME_JA: 2,
-  TYPE: 3,
-  CATEGORY: 4,
-  POWER: 5,
-  ACCURACY: 6,
-  PP: 7,
+  // name_ja 列なし
+  TYPE: 2,
+  CATEGORY: 3,
+  POWER: 4,
+  ACCURACY: 5,
+  PP: 6,
 } as const
